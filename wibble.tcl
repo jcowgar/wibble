@@ -906,7 +906,12 @@ proc ::wibble::process {port socket peerhost peerport} {
             }
 
             # Flush the outgoing buffer.
-            catch {chan flush $socket}
+            if {[dict exists $request header connection] && [dict get $request header connection] eq "close"} {
+                chan close $socket
+                break
+            } else {
+                chan flush $socket
+            }
             unset request
         }
     } on error {"" options} {
@@ -984,3 +989,4 @@ if {$argv0 eq [info script]} {
 }
 
 # vim: set sts=4 sw=4 tw=80 et ft=tcl:
+
