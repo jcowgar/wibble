@@ -827,6 +827,23 @@ proc ::wibble::process {port socket peerhost peerport} {
                 if {[dict get $request method] ne "HEAD"} {
                     set file [open [dict get $response contentfile]]
                 }
+			} elseif {[dict exists $response header content-encoding] &&
+				[dict get $response header content-encoding] eq "gzip"
+			} {
+				set gzip [binary format "H*iH*" "1f8b0800" [clock seconds] "0003"]
+				set content [dict get $response content]
+				append gzip [zlib deflate $content]
+				append gzip [binary format i [zlib crc32 $content]]
+				append gzip [binary format i [string length $content]]
+				set response [dict merge $response {
+					header {
+						Vary	Accept-Encoding
+						Content-Encoding	gzip
+						Accept-Ranges	bytes
+					}
+				}]
+				dict set response content $gzip
+				set size [string length [dict get $response content]]
             } elseif {[dict exists $response contentchan]} {
                 if {[dict exists $response contentsize]} {
                     set size [dict get $response contentsize]
