@@ -886,7 +886,7 @@ proc ::wibble::process {port socket peerhost peerport} {
                     Content-Length Content-Location Content-MD5 Content-Range
                     Content-Type Date ETag Expires Last-Modified Location Pragma
                     Proxy-Authenticate Retry-After Server Set-Cookie Trailer
-                    Transfer-Encoding Upgrade Vary Via Warning WWW-Authenticate
+                    Transfer-Encoding Upgrade Vary Via Warning WWW-Authenticate Access-Control-Allow-Origin Origin Access-Control-Allow-Credentials Access-Control-Expose-Headers Access-Control-Max-Age Access-Control-Allow-Methods Access-Control-Allow-Headers Access-Control-Request-Method Access-Control-Request-Headers
                 } $key]
                 if {$normalizedkey ne ""} {
                     set key $normalizedkey
