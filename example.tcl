@@ -1,3 +1,6 @@
+#!/usr/bin/tclsh8.6
+# change the above line to point to the tclsh8.6 executable
+
 lappend auto_path .
 package require wibble
 
