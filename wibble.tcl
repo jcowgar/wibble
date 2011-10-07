@@ -643,7 +643,7 @@ proc ::wibble::getrequest {port chan peerhost peerport} {
     # Receive and parse the first line.  Process "." and ".." path components.
     regexp {^\s*(\S*)\s+(\S*)\s+(.*?)\s*$} [getline] _ method uri protocol
     regexp {^([^?]*)(\?.*)?$} $uri _ path query
-    set path [regsub -all {(?:/|^)\.(?=/|$)} [dehex $path] /]
+    set path [regsub -all {(?:/|^)\.(?=/|$)} [encoding convertfrom utf-8 [dehex $path]] /]
     while {[regexp -indices {(?:/[^/]*/+|^[^/]*/+|^)\.\.(?=/|$)} $path range]} {
         set path [string replace $path {*}$range ""]
     }
