@@ -1,4 +1,5 @@
-source wibble.tcl
+lappend auto_path .
+package require wibble
 
 # =============================== example code ================================
 
@@ -17,9 +18,11 @@ if {$argv0 eq [info script]} {
     ::wibble::handle / dirlist root $root
     ::wibble::handle / notfound
 
-    # Start a server and enter the event loop.
+    # Start a server and enter the event loop if not already there.
     catch {
         ::wibble::listen 8080
-        vwait forever
+        if {!$tcl_interactive} {
+			vwait forever
+		}
     }
 }
