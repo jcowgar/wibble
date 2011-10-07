@@ -643,7 +643,7 @@ proc ::wibble::getrequest {port chan peerhost peerport} {
     # Receive and parse the first line.  Process "." and ".." path components.
     regexp {^\s*(\S*)\s+(\S*)\s+(.*?)\s*$} [getline] _ method uri protocol
     regexp {^([^?]*)(\?.*)?$} $uri _ path query
-    set path [regsub -all {(?:/|^)\.(?=/|$)} [dehex $path] /]
+    set path [regsub -all {(?:/|^)\.(?=/|$)} [encoding convertfrom utf-8 [dehex $path]] /]
     while {[regexp -indices {(?:/[^/]*/+|^[^/]*/+|^)\.\.(?=/|$)} $path range]} {
         set path [string replace $path {*}$range ""]
     }
@@ -827,6 +827,23 @@ proc ::wibble::process {port socket peerhost peerport} {
                 if {[dict get $request method] ne "HEAD"} {
                     set file [open [dict get $response contentfile]]
                 }
+			} elseif {[dict exists $response header content-encoding] &&
+				[dict get $response header content-encoding] eq "gzip"
+			} {
+				set gzip [binary format "H*iH*" "1f8b0800" [clock seconds] "0003"]
+				set content [dict get $response content]
+				append gzip [zlib deflate $content]
+				append gzip [binary format i [zlib crc32 $content]]
+				append gzip [binary format i [string length $content]]
+				set response [dict merge $response {
+					header {
+						Vary	Accept-Encoding
+						Content-Encoding	gzip
+						Accept-Ranges	bytes
+					}
+				}]
+				dict set response content $gzip
+				set size [string length [dict get $response content]]
             } elseif {[dict exists $response contentchan]} {
                 if {[dict exists $response contentsize]} {
                     set size [dict get $response contentsize]
@@ -869,7 +886,11 @@ proc ::wibble::process {port socket peerhost peerport} {
                     Content-Length Content-Location Content-MD5 Content-Range
                     Content-Type Date ETag Expires Last-Modified Location Pragma
                     Proxy-Authenticate Retry-After Server Set-Cookie Trailer
-                    Transfer-Encoding Upgrade Vary Via Warning WWW-Authenticate
+                    Transfer-Encoding Upgrade Vary Via Warning WWW-Authenticate 
+                    Access-Control-Allow-Origin Origin Access-Control-Allow-Credentials 
+                    Access-Control-Expose-Headers Access-Control-Max-Age 
+                    Access-Control-Allow-Methods Access-Control-Allow-Headers 
+                    Access-Control-Request-Method Access-Control-Request-Headers
                 } $key]
                 if {$normalizedkey ne ""} {
                     set key $normalizedkey
